@@ -25,9 +25,7 @@ app.use(
 
 app.get("/", async (req, res) => {
   res.header("Access-Control-Allow-Origin", "http://localhost:3000");
-  res.status(200).json({
-    message: "Welcome to Insignia Tours & Travels production!!",
-  });
+  res.send("Welcome to Insignia Tours & Travels production!!");
 });
 
 // Handle not found
