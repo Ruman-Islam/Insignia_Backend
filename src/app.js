@@ -1,6 +1,8 @@
 import cors from "cors";
 import express from "express";
 import httpStatus from "http-status";
+import globalErrorHandler from "./app/middleware/globalErrorHandler.js";
+import routes from "./app/routes/index.js";
 
 // Create an instance of the Express application
 const app = express();
@@ -23,6 +25,9 @@ app.use(
   })
 ); // Parse URL-encoded request bodies
 
+// Application Routes
+app.use("/api/v1", routes);
+
 app.get("/", async (req, res) => {
   res.header("Access-Control-Allow-Origin", "http://localhost:3000");
   res.send("Welcome to Insignia Tours & Travels production!!");
@@ -42,5 +47,9 @@ app.use((req, res) => {
     ],
   });
 });
+
+// Global Error Handler
+// Middleware to handle errors globally and send standardized error responses
+app.use(globalErrorHandler);
 
 export default app;
