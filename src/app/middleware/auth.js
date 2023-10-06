@@ -7,16 +7,22 @@ const auth =
   (...requiredRoles) =>
   async (req, res, next) => {
     try {
-      const token = req.headers["x-auth-token"];
+      const token = req.headers["authorization"].split(" ")[1];
 
       if (!token) {
         throw new ApiError(httpStatus.UNAUTHORIZED, "You are not authorized");
       }
 
       let verifiedUser = null;
-      verifiedUser = jwtHelpers.verifiedToken(token, config?.jwt?.secret);
+
+      try {
+        verifiedUser = jwtHelpers.verifiedToken(token, config?.jwt?.secret);
+      } catch (error) {
+        throw new ApiError(httpStatus.FORBIDDEN, "Forbidden");
+      }
 
       req.user = verifiedUser;
+
       // guard of role
       if (requiredRoles.length && !requiredRoles.includes(verifiedUser.role)) {
         throw new ApiError(httpStatus.FORBIDDEN, "Forbidden");

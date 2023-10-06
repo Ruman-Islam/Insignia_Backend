@@ -1,6 +1,7 @@
 import cors from "cors";
 import express from "express";
 import httpStatus from "http-status";
+import cookieParser from "cookie-parser";
 import globalErrorHandler from "./app/middleware/globalErrorHandler.js";
 import routes from "./app/routes/index.js";
 
@@ -12,18 +13,14 @@ const corsOptions = {
   optionsSuccessStatus: 200,
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
-  allowedHeaders: ["Content-Type", "x-auth-token"],
+  allowedHeaders: ["Content-Type", "x-auth-token", "authorization"],
 };
 
 // Application Middleware
 app.use(cors(corsOptions)); // Enable Cross-Origin Resource Sharing
-app.use(express.json({ limit: "50mb" })); // Parse JSON request bodies
-app.use(
-  express.urlencoded({
-    limit: "50mb",
-    extended: true,
-  })
-); // Parse URL-encoded request bodies
+app.use(cookieParser());
+app.use(express.json()); // Parse JSON request bodies
+app.use(express.urlencoded({ extended: true })); // Parse URL-encoded request bodies
 
 // Application Routes
 app.use("/api/v1", routes);
@@ -36,7 +33,7 @@ app.get("/", async (req, res) => {
 // Handle not found
 app.use((req, res) => {
   // Return a JSON response with the appropriate status code and error message
-  return res.status(httpStatus.NOT_FOUND).json({
+  return res.status(400).json({
     success: false,
     message: "API not found",
     errorMessages: [

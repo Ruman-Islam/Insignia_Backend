@@ -1,85 +1,268 @@
 import { OAuth2Client } from "google-auth-library";
-import httpStatus from "http-status";
 import User from "../user/user.model.js";
+import config from "../../../config/index.js";
+import ApiError from "../../../errors/ApiError.js";
+import { generateUserId } from "./auth.utils.js";
+import { jwtHelpers } from "../../../helper/jwtHelpers.js";
+import httpStatus from "http-status";
+import bcrypt from "bcrypt";
 
-function generateRandomUsername(firstName, lastName) {
-  // Generate a random number or string
-  const randomSuffix = Math.random().toString(36).substring(2, 5);
+const oAuth2Client = new OAuth2Client(
+  config.google_client_id,
+  config.google_client_secret,
+  "postmessage"
+);
 
-  // Combine the first name, last name, and random suffix
-  const userId =
-    firstName.toLowerCase() + lastName.toLowerCase() + randomSuffix;
+const googleLogin = async (code) => {
+  // Finding jwt token here from google
+  const {
+    tokens: {
+      access_token,
+      refresh_token,
+      scope,
+      token_type,
+      id_token,
+      expiry_date,
+    },
+  } = await oAuth2Client.getToken(code);
 
-  return userId;
-}
-
-const googleLogin = async (credential) => {
-  const secretToken =
-    "443826492964-nufd1n34duehop7jrbogfl57aehch6ub.apps.googleusercontent.com";
-  const clientSecret = "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";
-  const client = new OAuth2Client(secretToken, clientSecret);
-
-  const ticket = await client.verifyIdToken({
-    idToken: credential,
-    audience: secretToken,
+  // Collecting the user data from google
+  const ticket = await oAuth2Client.verifyIdToken({
+    idToken: id_token,
+    audience: config.google_client_id,
   });
+  // ....................................
+
   const { payload } = ticket;
+  const { picture, given_name, family_name, email, email_verified } = payload;
 
-  if (payload) {
-    const { picture, given_name, family_name, email, email_verified } = payload;
-    if (!email_verified) {
-      throw new ApiError(httpStatus.NOT_FOUND, "User is not verified");
-    }
+  // Google authenticating that user is verified or not
+  if (!email_verified) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "User is not verified");
+  }
 
-    const userExist = await User.findOne({ email: email });
+  // Checking that is the user already exits or not in the database
+  const isUserExists = await User.findOne({ email: payload.email });
 
-    if (userExist) {
-      // create jwt token
-    } else {
-      let userId;
-      let isUserIdUnique = false;
+  if (isUserExists) {
+    // Create access token
+    const accessToken = jwtHelpers.createToken(
+      {
+        role: isUserExists?.role,
+        userId: isUserExists?.userId,
+        email: isUserExists?.email,
+      },
+      config?.jwt?.secret,
+      config?.jwt?.expires_in
+    );
 
-      while (!isUserIdUnique) {
-        userId = generateRandomUsername(given_name, family_name);
-        const isUserExists = await User.findOne({ userId });
+    // Create refresh token
+    const refreshToken = jwtHelpers.createToken(
+      {
+        role: isUserExists?.role,
+        userId: isUserExists?.userId,
+        email: isUserExists?.email,
+      },
+      config?.jwt?.refresh_secret,
+      config?.jwt?.refresh_expires_in
+    );
 
-        if (!isUserExists) {
-          isUserIdUnique = true;
-        }
-      }
-
-      const user = await User.create({
-        userId,
-        userName: given_name + " " + family_name,
-        email: email,
-        avatar: picture,
-      });
-    }
+    return {
+      accessToken,
+      refreshToken,
+      user: isUserExists,
+    };
+  } else {
+    // Creating account here because no email/user found in the database
+    // Step 1: Generate unique user id
+    const userId = await generateUserId();
+    const createdUser = await User.create({
+      userId,
+      email: email,
+      userName: given_name + " " + family_name,
+      photoUrl: picture,
+    });
 
     // Create access token
-    //   const accessToken = jwtHelpers.createToken(
-    //     { employeeId: id, role: role },
-    //     config?.jwt?.secret,
-    //     config?.jwt?.expires_in
-    //   );
+    const accessToken = jwtHelpers.createToken(
+      {
+        role: createdUser?.role,
+        userId: createdUser?.userId,
+        email: createdUser?.email,
+      },
+      config?.jwt?.secret,
+      config?.jwt?.expires_in
+    );
 
-    //   // Create refresh token
-    //   const refreshToken = jwtHelpers.createToken(
-    //     { employeeId: id, role: role },
-    //     config?.jwt?.refresh_secret,
-    //     config?.jwt?.refresh_expires_in
-    //   );
+    // Create refresh token
+    const refreshToken = jwtHelpers.createToken(
+      {
+        role: createdUser?.role,
+        userId: createdUser?.userId,
+        email: createdUser?.email,
+      },
+      config?.jwt?.refresh_secret,
+      config?.jwt?.refresh_expires_in
+    );
 
-    //   userExist.password = undefined;
-
-    //   return {
-    //     ...userExist.toObject(),
-    //     accessToken,
-    //     refreshToken
-    //   };
+    return {
+      accessToken,
+      refreshToken,
+      user: createdUser,
+    };
   }
 };
 
+const register = async (payload) => {
+  const isEmailExist = await User.findOne({ email: payload?.email });
+
+  if (isEmailExist) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "User already exists with this email"
+    );
+  }
+
+  const userId = await generateUserId();
+  payload.userId = userId;
+
+  const createdUser = await User.create(payload);
+
+  if (!createdUser.userId) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "Failed to create user");
+  }
+
+  // Remove the password
+  createdUser.password = undefined;
+
+  // Create access token
+  const accessToken = jwtHelpers.createToken(
+    {
+      role: createdUser?.role,
+      userId: createdUser?.userId,
+      email: createdUser?.email,
+    },
+    config?.jwt?.secret,
+    config?.jwt?.expires_in
+  );
+
+  // Create refresh token
+  const refreshToken = jwtHelpers.createToken(
+    {
+      role: createdUser?.role,
+      userId: createdUser?.userId,
+      email: createdUser?.email,
+    },
+    config?.jwt?.refresh_secret,
+    config?.jwt?.refresh_expires_in
+  );
+
+  return {
+    accessToken,
+    refreshToken,
+    createdUser,
+  };
+};
+
+const login = async (payload) => {
+  const { email, password } = payload;
+
+  const isUserExist = await User.findOne({ email });
+
+  if (!isUserExist) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "User does not exist");
+  }
+
+  if (!isUserExist.password || !(await isUserExist.matchPassword(password))) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "Password is incorrect");
+  }
+
+  // Remove the password
+  isUserExist.password = undefined;
+
+  // Create access token
+  const accessToken = jwtHelpers.createToken(
+    {
+      role: isUserExist?.role,
+      userId: isUserExist?.userId,
+      email: isUserExist?.email,
+    },
+    config?.jwt?.secret,
+    config?.jwt?.expires_in
+  );
+
+  // Create refresh token
+  const refreshToken = jwtHelpers.createToken(
+    {
+      role: isUserExist?.role,
+      userId: isUserExist?.userId,
+      email: isUserExist?.email,
+    },
+    config?.jwt?.refresh_secret,
+    config?.jwt?.refresh_expires_in
+  );
+
+  return {
+    accessToken,
+    refreshToken,
+    user: isUserExist,
+  };
+};
+
+const logout = async (payload) => {
+  const cookies = payload;
+
+  if (!cookies.refreshToken)
+    throw ApiError(httpStatus.BAD_REQUEST, "Refresh token is required");
+
+    const {refreshToken} = payload
+};
+
+const refreshToken = async (token) => {
+  // verify token
+  // invalid token - synchronous
+  let verifiedToken = null;
+  try {
+    verifiedToken = jwtHelpers.verifiedToken(
+      token,
+      config?.jwt?.refresh_secret
+    );
+  } catch (err) {
+    throw new ApiError(httpStatus.FORBIDDEN, "Invalid refresh token");
+  }
+
+  const { userId } = verifiedToken;
+  // If the user already deleted then delete the refresh token
+  const isUserExist = await User.findOne({ userId: userId });
+
+  if (!isUserExist) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "User does not exist");
+  }
+
+  // Remove the password
+  isUserExist.password = undefined;
+
+  // generate new token
+  const newAccessToken = jwtHelpers.createToken(
+    {
+      role: isUserExist?.role,
+      userId: isUserExist?.userId,
+      email: isUserExist?.email,
+    },
+    config?.jwt?.secret,
+    config?.jwt?.expires_in
+  );
+
+  return {
+    accessToken: newAccessToken,
+    user: isUserExist,
+  };
+};
+
 export const AuthService = {
+  register,
+  login,
+  logout,
   googleLogin,
+  refreshToken,
 };

@@ -1,6 +1,6 @@
 import { Schema, model } from "mongoose";
 import bcrypt from "bcrypt";
-import { roles } from "./user.constant.js";
+import config from "../../../config/index.js";
 
 const UserSchema = Schema(
   {
@@ -9,47 +9,88 @@ const UserSchema = Schema(
       unique: true,
       required: [true, "User ID is required"],
     },
-    userName: {
-      type: String,
-      trim: true,
-      required: [true, "User name is required"],
-    },
     email: {
       type: String,
       trim: true,
       unique: true,
-      required: [true, "Email address is required"],
       match: [
         /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
         "Invalid URL format",
       ],
+      required: [true, "Email address is required"],
     },
-    password: {
+    userName: {
       type: String,
-      // required: [true, "Password is required"],
+      trim: true,
+      min: [3, "Too small"],
+      max: [30, "Too big"],
+      required: [true, "User name is required"],
     },
-    joiningDate: {
+    gender: {
       type: String,
-      required: [true, "Joining date is required"],
-    },
-    joiningTime: {
-      type: String,
-      required: [true, "Joining time is required"],
+      enum: {
+        values: ["male", "female"],
+        message: "{VALUE} is not matched",
+      },
     },
     role: {
       type: String,
       enum: {
-        values: roles,
+        values: ["customer", "admin", "super_admin"],
         message: "{VALUE} is not matched",
       },
-      default: "user",
+      default: "customer",
     },
-    avatar: {
+    presentAddress: {
       type: String,
-      required: [true, "Avatar is required"],
+      trim: true,
+    },
+    permanentAddress: {
+      type: String,
+      trim: true,
+    },
+    martialStatus: {
+      type: String,
+      enum: {
+        values: ["married", "unmarried"],
+        message: "{VALUE} is not matched",
+      },
+    },
+    dateOfBirth: {
+      type: String,
+      trim: true,
+    },
+    passportNumber: {
+      type: String,
+      trim: true,
+    },
+    passportExpiryDate: {
+      type: String,
+      trim: true,
+    },
+    nationalID: {
+      type: String,
+      trim: true,
+    },
+    emergencyContact: {
+      type: String,
+      trim: true,
+    },
+    religion: {
+      type: String,
+      trim: true,
+    },
+    password: {
+      type: String,
+      match: [
+        /^(?=.*\d)(?=.*[A-Z])(?=.*[a-z])(?=.*[^a-zA-Z\d]).{6,}$/,
+        "Invalid password format",
+      ],
+    },
+    photoUrl: {
+      type: String,
       match: [/(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/, "Invalid URL format"],
     },
-    permissions: [],
   },
   {
     timestamps: true,
@@ -60,15 +101,19 @@ const UserSchema = Schema(
 );
 
 UserSchema.methods.matchPassword = async function (enteredPassword) {
+
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
 UserSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) {
-    next();
+  const user = this;
+  if (user.password) {
+    user.password = await bcrypt.hash(
+      user.password,
+      Number(config.bcrypt_salt_rounds)
+    );
   }
-
-  this.password = bcrypt.hashSync(this.password, 10);
+  next();
 });
 
 const User = model("User", UserSchema);
