@@ -175,7 +175,7 @@ const login = async (payload) => {
   }
 
   if (!isUserExist.password || !(await isUserExist.matchPassword(password))) {
-    throw new ApiError(httpStatus.BAD_REQUEST, "Password is incorrect");
+    throw new ApiError(httpStatus.BAD_REQUEST, "Invalid username or password!");
   }
 
   // Remove the password

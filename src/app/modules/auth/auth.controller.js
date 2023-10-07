@@ -12,8 +12,9 @@ const register = catchAsync(async (req, res) => {
 
   // set refresh token into cookie
   const cookieOptions = {
-    secure: config.env === "production",
     httpOnly: true,
+    sameSite: "None",
+    secure: config.env === "production",
   };
 
   res.cookie("refreshToken", refreshToken, cookieOptions);
@@ -35,8 +36,9 @@ const login = catchAsync(async (req, res) => {
 
   // set refresh token into cookie
   const cookieOptions = {
-    secure: config.env === "production",
     httpOnly: true,
+    sameSite: "None",
+    secure: config.env === "production",
   };
 
   res.cookie("refreshToken", refreshToken, cookieOptions);
@@ -58,11 +60,13 @@ const googleLogin = catchAsync(async (req, res) => {
 
   // set refresh token into cookie
   const cookieOptions = {
-    secure: config.env === "production",
     httpOnly: true,
+    sameSite: "None",
+    secure: config.env === "production",
   };
 
   res.cookie("refreshToken", refreshToken, cookieOptions);
+
   return sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
@@ -80,9 +84,9 @@ const logout = catchAsync(async (req, res) => {
 
   // set refresh token into cookie
   const cookieOptions = {
-    secure: config.env === "production",
     httpOnly: true,
     sameSite: "None",
+    secure: config.env === "production",
   };
 
   res.clearCookie("refreshToken", cookieOptions);
@@ -102,8 +106,9 @@ const refreshToken = catchAsync(async (req, res) => {
 
   // set refresh token into cookie
   const cookieOptions = {
-    secure: config.env === "production",
     httpOnly: true,
+    sameSite: "None",
+    secure: config.env === "production",
   };
 
   res.cookie("refreshToken", refreshToken, cookieOptions);
@@ -134,13 +139,14 @@ const forgotPassword = catchAsync(async (req, res) => {
 const resetPassword = catchAsync(async (req, res) => {
   const { ...resetPasswordData } = req.body;
 
- const result = await AuthService.resetPassword(resetPasswordData);
- const { refreshToken, ...others } = result;
+  const result = await AuthService.resetPassword(resetPasswordData);
+  const { refreshToken, ...others } = result;
 
   // set refresh token into cookie
   const cookieOptions = {
-    secure: config.env === "production",
     httpOnly: true,
+    sameSite: "None",
+    secure: config.env === "production",
   };
 
   res.cookie("refreshToken", refreshToken, cookieOptions);

@@ -1,6 +1,5 @@
 import cors from "cors";
 import express from "express";
-import httpStatus from "http-status";
 import cookieParser from "cookie-parser";
 import globalErrorHandler from "./app/middleware/globalErrorHandler.js";
 import routes from "./app/routes/index.js";
@@ -17,7 +16,7 @@ const corsOptions = {
   optionsSuccessStatus: 200,
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
-  allowedHeaders: ["Content-Type", "x-auth-token", "authorization"],
+  allowedHeaders: ["Content-Type", "authorization"],
 };
 
 // Application Middleware
@@ -30,7 +29,13 @@ app.use(express.urlencoded({ extended: true })); // Parse URL-encoded request bo
 app.use("/api/v1", routes);
 
 app.get("/", async (req, res) => {
+  res.header('Access-Control-Allow-Credentials', true);
   res.header("Access-Control-Allow-Origin", "http://localhost:3000");
+  res.header("Access-Control-Allow-Origin", "https://pingdashtech.org");
+  res.header(
+    "Access-Control-Allow-Origin",
+    "https://insignia-dev.pingdashtech.org"
+  );
   res.send("Welcome to Insignia Tours & Travels production!!");
 });
 
