@@ -20,8 +20,11 @@ const config = {
     email_expires_in: process.env.JWT_EMAIL_EXPIRES_IN,
   },
 
-  support_mail_address:  process.env.SUPPORT_MAIL_ADDRESS,
-  nodemailer_pass:  process.env.NODEMAILER_PASS,
+  refresh_token_name: process.env.REFRESH_TOKEN_NAME,
+  refresh_token_domain: process.env.REFRESH_TOKEN_DOMAIN,
+
+  support_mail_address: process.env.SUPPORT_MAIL_ADDRESS,
+  nodemailer_pass: process.env.NODEMAILER_PASS,
 
   google_client_id: process.env.GOOGLE_CLIENT_ID,
   google_client_secret: process.env.GOOGLE_CLIENT_SECRET,

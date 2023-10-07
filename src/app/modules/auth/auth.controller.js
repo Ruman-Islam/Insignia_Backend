@@ -15,10 +15,12 @@ const register = catchAsync(async (req, res) => {
     httpOnly: true,
     sameSite: "None",
     secure: config.env === "production",
+    domain: config.refresh_token_domain,
     maxAge: 7 * 24 * 60 * 60 * 1000,
+    path: "/",
   };
 
-  res.cookie("refreshToken", refreshToken, cookieOptions);
+  res.cookie(config.refresh_token_name, refreshToken, cookieOptions);
 
   return sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -40,9 +42,12 @@ const login = catchAsync(async (req, res) => {
     httpOnly: true,
     sameSite: "None",
     secure: config.env === "production",
+    domain: config.refresh_token_domain,
     maxAge: 7 * 24 * 60 * 60 * 1000,
+    path: "/",
   };
-  res.cookie("refreshToken", refreshToken, cookieOptions);
+
+  res.cookie(config.refresh_token_name, refreshToken, cookieOptions);
 
   return sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -64,10 +69,12 @@ const googleLogin = catchAsync(async (req, res) => {
     httpOnly: true,
     sameSite: "None",
     secure: config.env === "production",
+    domain: config.refresh_token_domain,
     maxAge: 7 * 24 * 60 * 60 * 1000,
+    path: "/",
   };
 
-  res.cookie("refreshToken", refreshToken, cookieOptions);
+  res.cookie(config.refresh_token_name, refreshToken, cookieOptions);
 
   return sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -89,10 +96,12 @@ const logout = catchAsync(async (req, res) => {
     httpOnly: true,
     sameSite: "None",
     secure: config.env === "production",
+    domain: config.refresh_token_domain,
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+    path: "/",
   };
 
-  // res.clearCookie("refreshToken", cookieOptions);
-  res.cookie("refreshToken", null, cookieOptions);
+  res.cookie(config.refresh_token_name, "", cookieOptions);
 
   return sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -112,10 +121,12 @@ const refreshToken = catchAsync(async (req, res) => {
     httpOnly: true,
     sameSite: "None",
     secure: config.env === "production",
+    domain: config.refresh_token_domain,
     maxAge: 7 * 24 * 60 * 60 * 1000,
+    path: "/",
   };
 
-  res.cookie("refreshToken", refreshToken, cookieOptions);
+  res.cookie(config.refresh_token_name, refreshToken, cookieOptions);
 
   return sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -151,10 +162,12 @@ const resetPassword = catchAsync(async (req, res) => {
     httpOnly: true,
     sameSite: "None",
     secure: config.env === "production",
+    domain: config.refresh_token_domain,
     maxAge: 7 * 24 * 60 * 60 * 1000,
+    path: "/",
   };
 
-  res.cookie("refreshToken", refreshToken, cookieOptions);
+  res.cookie(config.refresh_token_name, refreshToken, cookieOptions);
 
   return sendResponse(res, {
     statusCode: httpStatus.OK,
