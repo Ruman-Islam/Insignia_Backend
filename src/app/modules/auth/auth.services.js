@@ -6,6 +6,7 @@ import { generateUserId } from "./auth.utils.js";
 import { jwtHelpers } from "../../../helper/jwtHelpers.js";
 import httpStatus from "http-status";
 import bcrypt from "bcrypt";
+import { sendForgotPasswordLink } from "../../../shared/nodeMailer.js";
 
 const oAuth2Client = new OAuth2Client(
   config.google_client_id,
@@ -209,15 +210,6 @@ const login = async (payload) => {
   };
 };
 
-const logout = async (payload) => {
-  const cookies = payload;
-
-  if (!cookies.refreshToken)
-    throw ApiError(httpStatus.BAD_REQUEST, "Refresh token is required");
-
-    const {refreshToken} = payload
-};
-
 const refreshToken = async (token) => {
   // verify token
   // invalid token - synchronous
@@ -259,10 +251,103 @@ const refreshToken = async (token) => {
   };
 };
 
+const forgotPassword = async (payload) => {
+  const { email } = payload;
+
+  const isUserExist = await User.findOne({ email });
+
+  if (!isUserExist) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "User does not exist");
+  }
+
+  // Create access token
+  const accessToken = jwtHelpers.createToken(
+    {
+      role: isUserExist?.role,
+      userId: isUserExist?.userId,
+      email: isUserExist?.email,
+    },
+    config?.jwt?.secret,
+    config?.jwt?.email_expires_in
+  );
+
+  const updatedUser = await User.findOneAndUpdate(
+    { email },
+    { resetToken: accessToken },
+    { new: true }
+  );
+
+  if (updatedUser.resetToken) {
+    await sendForgotPasswordLink(email, accessToken);
+  } else {
+    throw new ApiError(
+      httpStatus.INTERNAL_SERVER_ERROR,
+      "Internal Server Error"
+    );
+  }
+};
+
+const resetPassword = async (payload) => {
+  const { token, password } = payload;
+
+  let verifiedUser = null;
+  verifiedUser = jwtHelpers.verifiedToken(token, config?.jwt?.secret);
+
+  if (verifiedUser) {
+    const updatedUser = await User.findOneAndUpdate(
+      { email: verifiedUser.email },
+      {
+        password: await bcrypt.hash(
+          password,
+          Number(config.bcrypt_salt_rounds)
+        ),
+      },
+      { new: true }
+    );
+
+    if (updatedUser) {
+      // Create access token
+      const accessToken = jwtHelpers.createToken(
+        {
+          role: updatedUser?.role,
+          userId: updatedUser?.userId,
+          email: updatedUser?.email,
+        },
+        config?.jwt?.secret,
+        config?.jwt?.expires_in
+      );
+
+      // Create refresh token
+      const refreshToken = jwtHelpers.createToken(
+        {
+          role: updatedUser?.role,
+          userId: updatedUser?.userId,
+          email: updatedUser?.email,
+        },
+        config?.jwt?.refresh_secret,
+        config?.jwt?.refresh_expires_in
+      );
+
+      updatedUser.password = undefined;
+      return {
+        accessToken,
+        refreshToken,
+        user: updatedUser,
+      };
+    } else {
+      throw new ApiError(
+        httpStatus.INTERNAL_SERVER_ERROR,
+        "Internal Server Error"
+      );
+    }
+  }
+};
+
 export const AuthService = {
   register,
   login,
-  logout,
   googleLogin,
   refreshToken,
+  forgotPassword,
+  resetPassword,
 };

@@ -21,7 +21,7 @@ const register = catchAsync(async (req, res) => {
   return sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "Registration successful",
+    message: "Registration successful!",
     meta: null,
     data: others,
   });
@@ -29,6 +29,7 @@ const register = catchAsync(async (req, res) => {
 
 const login = catchAsync(async (req, res) => {
   const { ...loginData } = req.body;
+
   const result = await AuthService.login(loginData);
   const { refreshToken, ...others } = result;
 
@@ -43,7 +44,7 @@ const login = catchAsync(async (req, res) => {
   return sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "Login successful",
+    message: "Login successful!",
     meta: null,
     data: others,
   });
@@ -65,7 +66,7 @@ const googleLogin = catchAsync(async (req, res) => {
   return sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "Login successfully",
+    message: "Login successful!",
     meta: null,
     data: others,
   });
@@ -89,7 +90,7 @@ const logout = catchAsync(async (req, res) => {
   return sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "Logout successfully",
+    message: "Logout successful!",
     meta: null,
     data: null,
   });
@@ -110,9 +111,46 @@ const refreshToken = catchAsync(async (req, res) => {
   return sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "Refresh token successfully",
+    message: "Refresh token successful!ly",
     meta: null,
     data: result,
+  });
+});
+
+const forgotPassword = catchAsync(async (req, res) => {
+  const { ...forgotPasswordData } = req.body;
+
+  await AuthService.forgotPassword(forgotPasswordData);
+
+  return sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "An email has been sent!",
+    meta: null,
+    data: null,
+  });
+});
+
+const resetPassword = catchAsync(async (req, res) => {
+  const { ...resetPasswordData } = req.body;
+
+ const result = await AuthService.resetPassword(resetPasswordData);
+ const { refreshToken, ...others } = result;
+
+  // set refresh token into cookie
+  const cookieOptions = {
+    secure: config.env === "production",
+    httpOnly: true,
+  };
+
+  res.cookie("refreshToken", refreshToken, cookieOptions);
+
+  return sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "password reset successful!",
+    meta: null,
+    data: others,
   });
 });
 
@@ -122,4 +160,6 @@ export const AuthController = {
   logout,
   googleLogin,
   refreshToken,
+  forgotPassword,
+  resetPassword,
 };

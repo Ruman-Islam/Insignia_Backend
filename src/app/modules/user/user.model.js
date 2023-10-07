@@ -83,9 +83,12 @@ const UserSchema = Schema(
     password: {
       type: String,
       match: [
-        /^(?=.*\d)(?=.*[A-Z])(?=.*[a-z])(?=.*[^a-zA-Z\d]).{6,}$/,
+        /^(?=.*[A-Za-z0-9])(?=.*[^A-Za-z0-9]).{8,}$/,
         "Invalid password format",
       ],
+    },
+    resetToken: {
+      type: String,
     },
     photoUrl: {
       type: String,
@@ -101,7 +104,6 @@ const UserSchema = Schema(
 );
 
 UserSchema.methods.matchPassword = async function (enteredPassword) {
-
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
