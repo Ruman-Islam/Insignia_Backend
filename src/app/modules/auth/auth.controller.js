@@ -15,6 +15,7 @@ const register = catchAsync(async (req, res) => {
     httpOnly: true,
     sameSite: "None",
     secure: config.env === "production",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
   };
 
   res.cookie("refreshToken", refreshToken, cookieOptions);
@@ -39,8 +40,8 @@ const login = catchAsync(async (req, res) => {
     httpOnly: true,
     sameSite: "None",
     secure: config.env === "production",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
   };
-
   res.cookie("refreshToken", refreshToken, cookieOptions);
 
   return sendResponse(res, {
@@ -63,6 +64,7 @@ const googleLogin = catchAsync(async (req, res) => {
     httpOnly: true,
     sameSite: "None",
     secure: config.env === "production",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
   };
 
   res.cookie("refreshToken", refreshToken, cookieOptions);
@@ -89,7 +91,8 @@ const logout = catchAsync(async (req, res) => {
     secure: config.env === "production",
   };
 
-  res.clearCookie("refreshToken", cookieOptions);
+  // res.clearCookie("refreshToken", cookieOptions);
+  res.cookie("refreshToken", null, cookieOptions);
 
   return sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -109,6 +112,7 @@ const refreshToken = catchAsync(async (req, res) => {
     httpOnly: true,
     sameSite: "None",
     secure: config.env === "production",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
   };
 
   res.cookie("refreshToken", refreshToken, cookieOptions);
@@ -147,6 +151,7 @@ const resetPassword = catchAsync(async (req, res) => {
     httpOnly: true,
     sameSite: "None",
     secure: config.env === "production",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
   };
 
   res.cookie("refreshToken", refreshToken, cookieOptions);

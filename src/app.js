@@ -29,7 +29,6 @@ app.use(express.urlencoded({ extended: true })); // Parse URL-encoded request bo
 app.use("/api/v1", routes);
 
 app.get("/", async (req, res) => {
-  res.header('Access-Control-Allow-Credentials', true);
   res.header("Access-Control-Allow-Origin", "http://localhost:3000");
   res.header("Access-Control-Allow-Origin", "https://pingdashtech.org");
   res.header(
