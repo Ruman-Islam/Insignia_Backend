@@ -13,14 +13,12 @@ const register = catchAsync(async (req, res) => {
   // set refresh token into cookie
   const cookieOptions = {
     httpOnly: true,
-    sameSite: "None",
+    sameSite: "none",
     secure: config.env === "production",
-    domain: config.refresh_token_domain,
     maxAge: 7 * 24 * 60 * 60 * 1000,
-    path: "/",
   };
 
-  res.cookie(config.refresh_token_name, refreshToken, cookieOptions);
+  res.cookie("refreshToken", refreshToken, cookieOptions);
 
   return sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -40,14 +38,11 @@ const login = catchAsync(async (req, res) => {
   // set refresh token into cookie
   const cookieOptions = {
     httpOnly: true,
-    sameSite: "None",
+    sameSite: "none",
     secure: config.env === "production",
-    domain: config.refresh_token_domain,
     maxAge: 7 * 24 * 60 * 60 * 1000,
-    path: "/",
   };
-
-  res.cookie(config.refresh_token_name, refreshToken, cookieOptions);
+  res.cookie("refreshToken", refreshToken, cookieOptions);
 
   return sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -67,14 +62,14 @@ const googleLogin = catchAsync(async (req, res) => {
   // set refresh token into cookie
   const cookieOptions = {
     httpOnly: true,
-    sameSite: "None",
+    sameSite: "none",
     secure: config.env === "production",
-    domain: config.refresh_token_domain,
+    domain: "insignia-backend.vercel.app",
     maxAge: 7 * 24 * 60 * 60 * 1000,
     path: "/",
   };
 
-  res.cookie(config.refresh_token_name, refreshToken, cookieOptions);
+  res.cookie("refreshToken", refreshToken, cookieOptions);
 
   return sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -94,14 +89,15 @@ const logout = catchAsync(async (req, res) => {
   // set refresh token into cookie
   const cookieOptions = {
     httpOnly: true,
-    sameSite: "None",
+    sameSite: "none",
     secure: config.env === "production",
-    domain: config.refresh_token_domain,
-    maxAge: 7 * 24 * 60 * 60 * 1000,
+    domain: "insignia-backend.vercel.app",
     path: "/",
+    maxAge: 0,
   };
 
-  res.cookie(config.refresh_token_name, "", cookieOptions);
+  // res.clearCookie("refreshToken", cookieOptions);
+  res.cookie("refreshToken", "", cookieOptions);
 
   return sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -119,14 +115,12 @@ const refreshToken = catchAsync(async (req, res) => {
   // set refresh token into cookie
   const cookieOptions = {
     httpOnly: true,
-    sameSite: "None",
+    sameSite: "none",
     secure: config.env === "production",
-    domain: config.refresh_token_domain,
     maxAge: 7 * 24 * 60 * 60 * 1000,
-    path: "/",
   };
 
-  res.cookie(config.refresh_token_name, refreshToken, cookieOptions);
+  res.cookie("refreshToken", refreshToken, cookieOptions);
 
   return sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -160,14 +154,12 @@ const resetPassword = catchAsync(async (req, res) => {
   // set refresh token into cookie
   const cookieOptions = {
     httpOnly: true,
-    sameSite: "None",
+    sameSite: "none",
     secure: config.env === "production",
-    domain: config.refresh_token_domain,
     maxAge: 7 * 24 * 60 * 60 * 1000,
-    path: "/",
   };
 
-  res.cookie(config.refresh_token_name, refreshToken, cookieOptions);
+  res.cookie("refreshToken", refreshToken, cookieOptions);
 
   return sendResponse(res, {
     statusCode: httpStatus.OK,
