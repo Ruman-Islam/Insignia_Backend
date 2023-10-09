@@ -39,9 +39,19 @@ const googleLoginZodSchema = z.object({
   }),
 });
 
+// ^ Under development
+// const refreshTokenZodSchema = z.object({
+//   cookies: z.object({
+//     rT: z.string({
+//       required_error: "Refresh token is required",
+//     }),
+//   }),
+// });
+// ^ .........................
+
 const refreshTokenZodSchema = z.object({
-  cookies: z.object({
-    refreshToken: z.string({
+  body: z.object({
+    token: z.string({
       required_error: "Refresh token is required",
     }),
   }),
@@ -70,6 +80,19 @@ const resetPasswordZodSchema = z.object({
   }),
 });
 
+const changePasswordZodSchema = z.object({
+  body: z.object({
+    currentPassword: z.string({
+      required_error: "Current password is required",
+    }),
+    newPassword: z
+      .string({
+        required_error: "New password is required",
+      })
+      .regex(/^(?=.*[A-Za-z0-9])(?=.*[^A-Za-z0-9]).{8,}$/),
+  }),
+});
+
 export const AuthValidation = {
   registerZodSchema,
   loginZodSchema,
@@ -77,4 +100,5 @@ export const AuthValidation = {
   refreshTokenZodSchema,
   forgotPasswordZodSchema,
   resetPasswordZodSchema,
+  changePasswordZodSchema,
 };

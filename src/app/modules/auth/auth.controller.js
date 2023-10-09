@@ -3,101 +3,125 @@ import catchAsync from "../../../shared/catchAsync.js";
 import { AuthService } from "./auth.services.js";
 import sendResponse from "../../../shared/sendResponse.js";
 import config from "../../../config/index.js";
-import ApiError from "../../../errors/ApiError.js";
+
+// const register = catchAsync(async (req, res) => {
+//   const { ...registerData } = req.body;
+//   const result = await AuthService.register(registerData);
+//   const { refreshToken, ...others } = result;
+
+//   // set refresh token into cookie
+//   res.cookie(config.refresh_token_name, refreshToken, {
+//     expires: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
+//     sameSite: "none",
+//     secure: true,
+//     httpOnly: true,
+//   });
+
+//   return sendResponse(res, {
+//     statusCode: httpStatus.OK,
+//     success: true,
+//     message: "Registration successful!",
+//     meta: null,
+//     data: others,
+//   });
+// });
 
 const register = catchAsync(async (req, res) => {
   const { ...registerData } = req.body;
   const result = await AuthService.register(registerData);
-  const { refreshToken, ...others } = result;
-
-  // set refresh token into cookie
-  const cookieOptions = {
-    httpOnly: true,
-    sameSite: "none",
-    secure: config.env === "production",
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  };
-
-  res.cookie("refreshToken", refreshToken, cookieOptions);
 
   return sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: "Registration successful!",
     meta: null,
-    data: others,
+    data: result,
   });
 });
+
+// const login = catchAsync(async (req, res) => {
+//   const { ...loginData } = req.body;
+
+//   const result = await AuthService.login(loginData);
+//   const { refreshToken, ...others } = result;
+
+//   // set refresh token into cookie
+//   res.cookie(config.refresh_token_name, refreshToken, {
+//     expires: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
+//     sameSite: "none",
+//     secure: true,
+//     httpOnly: true,
+//   });
+
+//   return sendResponse(res, {
+//     statusCode: httpStatus.OK,
+//     success: true,
+//     message: "Login successful!",
+//     meta: null,
+//     data: others,
+//   });
+// });
 
 const login = catchAsync(async (req, res) => {
   const { ...loginData } = req.body;
 
   const result = await AuthService.login(loginData);
-  const { refreshToken, ...others } = result;
-
-  // set refresh token into cookie
-  const cookieOptions = {
-    httpOnly: true,
-    sameSite: "none",
-    secure: config.env === "production",
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  };
-  res.cookie("refreshToken", refreshToken, cookieOptions);
 
   return sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: "Login successful!",
     meta: null,
-    data: others,
+    data: result,
   });
 });
+
+// const googleLogin = catchAsync(async (req, res) => {
+//   const authHeader = req.headers.authorization;
+//   const code = authHeader.split(" ")[1];
+//   const result = await AuthService.googleLogin(code);
+//   const { refreshToken, ...others } = result;
+
+//   // set refresh token into cookie
+//   res.cookie(config.refresh_token_name, refreshToken, {
+//     expires: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
+//     sameSite: "none",
+//     secure: true,
+//     httpOnly: true,
+//   });
+
+//   return sendResponse(res, {
+//     statusCode: httpStatus.OK,
+//     success: true,
+//     message: "Login successful!",
+//     meta: null,
+//     data: others,
+//   });
+// });
 
 const googleLogin = catchAsync(async (req, res) => {
   const authHeader = req.headers.authorization;
   const code = authHeader.split(" ")[1];
   const result = await AuthService.googleLogin(code);
-  const { refreshToken, ...others } = result;
-
-  // set refresh token into cookie
-  const cookieOptions = {
-    httpOnly: true,
-    sameSite: "none",
-    secure: config.env === "production",
-    domain: "insignia-backend.vercel.app",
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-    path: "/",
-  };
-
-  res.cookie("refreshToken", refreshToken, cookieOptions);
 
   return sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: "Login successful!",
     meta: null,
-    data: others,
+    data: result,
   });
 });
 
 const logout = catchAsync(async (req, res) => {
-  const cookies = req.cookies;
-
-  if (!cookies.refreshToken)
-    throw ApiError(httpStatus.BAD_REQUEST, "Refresh token is required");
-
   // set refresh token into cookie
-  const cookieOptions = {
-    httpOnly: true,
+  const pastExpirationDate = new Date(Date.now() - 3600000);
+  res.cookie(config.refresh_token_name, null, {
+    expires: pastExpirationDate,
     sameSite: "none",
-    secure: config.env === "production",
-    domain: "insignia-backend.vercel.app",
-    path: "/",
-    maxAge: 0,
-  };
-
-  // res.clearCookie("refreshToken", cookieOptions);
-  res.cookie("refreshToken", "", cookieOptions);
+    secure: true,
+    httpOnly: true,
+  });
 
   return sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -108,19 +132,30 @@ const logout = catchAsync(async (req, res) => {
   });
 });
 
+// const refreshToken = catchAsync(async (req, res) => {
+//   const { rT } = req.cookies;
+//   const result = await AuthService.refreshToken(rT);
+
+//   // set refresh token into cookie
+//   res.cookie(config.refresh_token_name, rT, {
+//     expires: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
+//     sameSite: "none",
+//     secure: true,
+//     httpOnly: true,
+//   });
+
+//   return sendResponse(res, {
+//     statusCode: httpStatus.OK,
+//     success: true,
+//     message: "Refresh token successful!ly",
+//     meta: null,
+//     data: result,
+//   });
+// });
+
 const refreshToken = catchAsync(async (req, res) => {
-  const { refreshToken } = req.cookies;
-  const result = await AuthService.refreshToken(refreshToken);
-
-  // set refresh token into cookie
-  const cookieOptions = {
-    httpOnly: true,
-    sameSite: "none",
-    secure: config.env === "production",
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  };
-
-  res.cookie("refreshToken", refreshToken, cookieOptions);
+  const { token } = req.body;
+  const result = await AuthService.refreshToken(token);
 
   return sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -145,28 +180,53 @@ const forgotPassword = catchAsync(async (req, res) => {
   });
 });
 
+// const resetPassword = catchAsync(async (req, res) => {
+//   const { ...resetPasswordData } = req.body;
+
+//   const result = await AuthService.resetPassword(resetPasswordData);
+//   const { refreshToken, ...others } = result;
+
+//   // set refresh token into cookie
+//   res.cookie(config.refresh_token_name, refreshToken, {
+//     expires: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
+//     sameSite: "none",
+//     secure: true,
+//     httpOnly: true,
+//   });
+
+//   return sendResponse(res, {
+//     statusCode: httpStatus.OK,
+//     success: true,
+//     message: "password reset successful!",
+//     meta: null,
+//     data: others,
+//   });
+// });
+
 const resetPassword = catchAsync(async (req, res) => {
   const { ...resetPasswordData } = req.body;
 
   const result = await AuthService.resetPassword(resetPasswordData);
-  const { refreshToken, ...others } = result;
-
-  // set refresh token into cookie
-  const cookieOptions = {
-    httpOnly: true,
-    sameSite: "none",
-    secure: config.env === "production",
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  };
-
-  res.cookie("refreshToken", refreshToken, cookieOptions);
 
   return sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "password reset successful!",
+    message: "Password reset successful!",
     meta: null,
-    data: others,
+    data: result,
+  });
+});
+
+const changePassword = catchAsync(async (req, res) => {
+  const payload = { ...req.body, ...req.user };
+  await AuthService.changePassword(payload);
+
+  return sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Password reset successful!",
+    meta: null,
+    data: null,
   });
 });
 
@@ -178,4 +238,5 @@ export const AuthController = {
   refreshToken,
   forgotPassword,
   resetPassword,
+  changePassword,
 };

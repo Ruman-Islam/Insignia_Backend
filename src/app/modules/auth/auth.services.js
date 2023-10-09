@@ -161,7 +161,7 @@ const register = async (payload) => {
   return {
     accessToken,
     refreshToken,
-    createdUser,
+    user: createdUser,
   };
 };
 
@@ -291,56 +291,79 @@ const resetPassword = async (payload) => {
   const { token, password } = payload;
 
   let verifiedUser = null;
-  verifiedUser = jwtHelpers.verifiedToken(token, config?.jwt?.secret);
+  // verifiedUser = jwtHelpers.verifiedToken(token, config?.jwt?.secret);
 
-  if (verifiedUser) {
-    const updatedUser = await User.findOneAndUpdate(
-      { email: verifiedUser.email },
-      {
-        password: await bcrypt.hash(
-          password,
-          Number(config.bcrypt_salt_rounds)
-        ),
-      },
-      { new: true }
-    );
-
-    if (updatedUser) {
-      // Create access token
-      const accessToken = jwtHelpers.createToken(
-        {
-          role: updatedUser?.role,
-          userId: updatedUser?.userId,
-          email: updatedUser?.email,
-        },
-        config?.jwt?.secret,
-        config?.jwt?.expires_in
-      );
-
-      // Create refresh token
-      const refreshToken = jwtHelpers.createToken(
-        {
-          role: updatedUser?.role,
-          userId: updatedUser?.userId,
-          email: updatedUser?.email,
-        },
-        config?.jwt?.refresh_secret,
-        config?.jwt?.refresh_expires_in
-      );
-
-      updatedUser.password = undefined;
-      return {
-        accessToken,
-        refreshToken,
-        user: updatedUser,
-      };
-    } else {
-      throw new ApiError(
-        httpStatus.INTERNAL_SERVER_ERROR,
-        "Internal Server Error"
-      );
-    }
+  try {
+    verifiedUser = jwtHelpers.verifiedToken(token, config?.jwt?.secret);
+  } catch (error) {
+    throw new ApiError(httpStatus.FORBIDDEN, "Token expired!");
   }
+
+  const updatedUser = await User.findOneAndUpdate(
+    { email: verifiedUser.email },
+    {
+      password: await bcrypt.hash(password, Number(config.bcrypt_salt_rounds)),
+    },
+    { new: true }
+  );
+
+  // Create access token
+  const accessToken = jwtHelpers.createToken(
+    {
+      role: updatedUser?.role,
+      userId: updatedUser?.userId,
+      email: updatedUser?.email,
+    },
+    config?.jwt?.secret,
+    config?.jwt?.expires_in
+  );
+
+  // Create refresh token
+  const refreshToken = jwtHelpers.createToken(
+    {
+      role: updatedUser?.role,
+      userId: updatedUser?.userId,
+      email: updatedUser?.email,
+    },
+    config?.jwt?.refresh_secret,
+    config?.jwt?.refresh_expires_in
+  );
+
+  // Remove the password
+  updatedUser.password = undefined;
+
+  return {
+    accessToken,
+    refreshToken,
+    user: updatedUser,
+  };
+};
+
+const changePassword = async (payload) => {
+  const { currentPassword, newPassword, role, userId, email } = payload;
+  const isUserExist = await User.findOne({ email });
+
+  if (!isUserExist) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "User does not exist");
+  }
+
+  if (
+    !isUserExist.password ||
+    !(await isUserExist.matchPassword(currentPassword))
+  ) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "Password does not match!");
+  }
+
+  await User.findOneAndUpdate(
+    { email },
+    {
+      password: await bcrypt.hash(
+        newPassword,
+        Number(config.bcrypt_salt_rounds)
+      ),
+    },
+    { new: true }
+  );
 };
 
 export const AuthService = {
@@ -350,4 +373,5 @@ export const AuthService = {
   refreshToken,
   forgotPassword,
   resetPassword,
+  changePassword,
 };

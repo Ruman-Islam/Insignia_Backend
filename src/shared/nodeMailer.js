@@ -7,8 +7,8 @@ const transporter = nodemailer.createTransport({
     rejectUnauthorized: false,
   },
   auth: {
-    user: "rumanislam0429@gmail.com",
-    pass: "teqoczjtwcsqkjnw",
+    user: config.support_mail_address,
+    pass: config.nodemailer_pass,
   },
 });
 
