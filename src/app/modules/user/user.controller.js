@@ -5,9 +5,9 @@ import { UserService } from "./user.services.js";
 
 const profileUpdate = catchAsync(async (req, res) => {
   const { ...updateData } = req.body;
-  const { user } = req;
+  const { userId } = req.user;
 
-  const result = await UserService.profileUpdate(updateData, user);
+  const result = await UserService.profileUpdate(updateData, userId);
 
   return sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -18,6 +18,22 @@ const profileUpdate = catchAsync(async (req, res) => {
   });
 });
 
+const profileImageUpdate = catchAsync(async (req, res) => {
+  const { ...file } = req.file;
+  const { userId } = req.user;
+
+  const result = await UserService.profileImageUpdate(file, userId);
+
+  return sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Image updated successfully!",
+    meta: null,
+    data: result,
+  });
+});
+
 export const UserController = {
   profileUpdate,
+  profileImageUpdate,
 };

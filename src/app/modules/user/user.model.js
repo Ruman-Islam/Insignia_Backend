@@ -19,66 +19,13 @@ const UserSchema = Schema(
       ],
       required: [true, "Email address is required"],
     },
-    userName: {
-      type: String,
-      trim: true,
-      min: [3, "Too small"],
-      max: [30, "Too big"],
-      required: [true, "User name is required"],
-    },
-    gender: {
-      type: String,
-      enum: {
-        values: ["male", "female"],
-        message: "{VALUE} is not matched",
-      },
-    },
     role: {
       type: String,
       enum: {
-        values: ["customer", "admin", "super_admin"],
+        values: ["traveler", "admin", "super_admin"],
         message: "{VALUE} is not matched",
       },
-      default: "customer",
-    },
-    presentAddress: {
-      type: String,
-      trim: true,
-    },
-    permanentAddress: {
-      type: String,
-      trim: true,
-    },
-    martialStatus: {
-      type: String,
-      enum: {
-        values: ["married", "unmarried"],
-        message: "{VALUE} is not matched",
-      },
-    },
-    dateOfBirth: {
-      type: String,
-      trim: true,
-    },
-    passportNumber: {
-      type: String,
-      trim: true,
-    },
-    passportExpiryDate: {
-      type: String,
-      trim: true,
-    },
-    nationalID: {
-      type: String,
-      trim: true,
-    },
-    emergencyContact: {
-      type: String,
-      trim: true,
-    },
-    religion: {
-      type: String,
-      trim: true,
+      default: "traveler",
     },
     password: {
       type: String,
@@ -90,9 +37,10 @@ const UserSchema = Schema(
     resetToken: {
       type: String,
     },
-    photoUrl: {
-      type: String,
-      match: [/(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/, "Invalid URL format"],
+    traveler: {
+      type: Schema.Types.ObjectId,
+      ref: 'Traveler',
+      required: [true, 'Traveler id is missing!'],
     },
   },
   {

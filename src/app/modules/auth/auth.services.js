@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { OAuth2Client } from "google-auth-library";
 import User from "../user/user.model.js";
 import config from "../../../config/index.js";
@@ -7,6 +8,7 @@ import { jwtHelpers } from "../../../helper/jwtHelpers.js";
 import httpStatus from "http-status";
 import bcrypt from "bcrypt";
 import { sendForgotPasswordLink } from "../../../shared/nodeMailer.js";
+import Traveler from "../traveler/traveler.model.js";
 
 const oAuth2Client = new OAuth2Client(
   config.google_client_id,
@@ -43,7 +45,9 @@ const googleLogin = async (code) => {
   }
 
   // Checking that is the user already exits or not in the database
-  const isUserExists = await User.findOne({ email: payload.email });
+  const isUserExists = await User.findOne({ email: payload.email }).populate({
+    path: "traveler",
+  });
 
   if (isUserExists) {
     // Create access token
@@ -74,43 +78,94 @@ const googleLogin = async (code) => {
       user: isUserExists,
     };
   } else {
-    // Creating account here because no email/user found in the database
-    // Step 1: Generate unique user id
-    const userId = await generateUserId();
-    const createdUser = await User.create({
-      userId,
-      email: email,
-      userName: given_name + " " + family_name,
-      photoUrl: picture,
-    });
+    let newUserAllData = null;
+    const session = await mongoose.startSession();
+    try {
+      session.startTransaction();
+      // Creating account here because no email/user found in the database
+      // Step 1: Generate unique user id
+      const userId = await generateUserId();
 
-    // Create access token
-    const accessToken = jwtHelpers.createToken(
-      {
-        role: createdUser?.role,
-        userId: createdUser?.userId,
-        email: createdUser?.email,
-      },
-      config?.jwt?.secret,
-      config?.jwt?.expires_in
-    );
+      const createdTraveler = await Traveler.create(
+        [
+          {
+            firstName: given_name,
+            lastName: family_name,
+            photo: {
+              cloudinaryUrl: picture,
+            },
+          },
+        ],
+        { session }
+      );
 
-    // Create refresh token
-    const refreshToken = jwtHelpers.createToken(
-      {
-        role: createdUser?.role,
-        userId: createdUser?.userId,
-        email: createdUser?.email,
-      },
-      config?.jwt?.refresh_secret,
-      config?.jwt?.refresh_expires_in
-    );
+      if (!createdTraveler.length) {
+        throw new ApiError(
+          httpStatus.BAD_REQUEST,
+          "Failed to create traveler!"
+        );
+      }
 
-    return {
-      accessToken,
-      refreshToken,
-      user: createdUser,
-    };
+      const newUser = await User.create(
+        [
+          {
+            userId,
+            email,
+            traveler: createdTraveler[0]._id,
+          },
+        ],
+        { session }
+      );
+
+      if (!newUser.length) {
+        throw new ApiError(httpStatus.BAD_REQUEST, "Failed to create user!");
+      }
+
+      newUserAllData = newUser[0];
+
+      await session.commitTransaction();
+    } catch (error) {
+      await session.abortTransaction();
+      throw error;
+    } finally {
+      await session.endSession();
+    }
+
+    if (newUserAllData) {
+      newUserAllData = await User.findOne({
+        id: newUserAllData.id,
+      }).populate({
+        path: "traveler",
+      });
+
+      const tokenObj = {
+        role: newUserAllData?.role,
+        userId: newUserAllData?.userId,
+        email: newUserAllData?.email,
+      };
+
+      // Create access token
+      const accessToken = jwtHelpers.createToken(
+        tokenObj,
+        config?.jwt?.secret,
+        config?.jwt?.expires_in
+      );
+
+      // Create refresh token
+      const refreshToken = jwtHelpers.createToken(
+        tokenObj,
+        config?.jwt?.refresh_secret,
+        config?.jwt?.refresh_expires_in
+      );
+
+      // Remove the password
+      newUserAllData.password = undefined;
+      return {
+        accessToken,
+        refreshToken,
+        user: newUserAllData,
+      };
+    }
   }
 };
 
@@ -126,49 +181,82 @@ const register = async (payload) => {
 
   const userId = await generateUserId();
   payload.userId = userId;
+  // const createdUser = await User.create(payload);
 
-  const createdUser = await User.create(payload);
+  let newUserAllData = null;
+  let accessToken = null;
+  let refreshToken = null;
+  const session = await mongoose.startSession();
 
-  if (!createdUser.userId) {
-    throw new ApiError(httpStatus.BAD_REQUEST, "Failed to create user");
+  try {
+    session.startTransaction();
+    const createdTraveler = await Traveler.create([payload], { session });
+
+    if (!createdTraveler.length) {
+      throw new ApiError(httpStatus.BAD_REQUEST, "Failed to create traveler!");
+    }
+
+    payload.traveler = createdTraveler[0]._id;
+
+    const newUser = await User.create([payload], { session });
+
+    if (!newUser.length) {
+      throw new ApiError(httpStatus.BAD_REQUEST, "Failed to create user!");
+    }
+
+    newUserAllData = newUser[0];
+
+    await session.commitTransaction();
+  } catch (error) {
+    await session.abortTransaction();
+    throw error;
+  } finally {
+    await session.endSession();
+  }
+
+  if (newUserAllData) {
+    newUserAllData = await User.findOne({
+      id: newUserAllData.id,
+    }).populate({
+      path: "traveler",
+    });
+
+    const tokenObj = {
+      role: newUserAllData?.role,
+      userId: newUserAllData?.userId,
+      email: newUserAllData?.email,
+    };
+
+    // Create access token
+    accessToken = jwtHelpers.createToken(
+      tokenObj,
+      config?.jwt?.secret,
+      config?.jwt?.expires_in
+    );
+
+    // Create refresh token
+    refreshToken = jwtHelpers.createToken(
+      tokenObj,
+      config?.jwt?.refresh_secret,
+      config?.jwt?.refresh_expires_in
+    );
   }
 
   // Remove the password
-  createdUser.password = undefined;
-
-  // Create access token
-  const accessToken = jwtHelpers.createToken(
-    {
-      role: createdUser?.role,
-      userId: createdUser?.userId,
-      email: createdUser?.email,
-    },
-    config?.jwt?.secret,
-    config?.jwt?.expires_in
-  );
-
-  // Create refresh token
-  const refreshToken = jwtHelpers.createToken(
-    {
-      role: createdUser?.role,
-      userId: createdUser?.userId,
-      email: createdUser?.email,
-    },
-    config?.jwt?.refresh_secret,
-    config?.jwt?.refresh_expires_in
-  );
-
+  newUserAllData.password = undefined;
   return {
     accessToken,
     refreshToken,
-    user: createdUser,
+    user: newUserAllData,
   };
 };
 
 const login = async (payload) => {
   const { email, password } = payload;
 
-  const isUserExist = await User.findOne({ email });
+  const isUserExist = await User.findOne({ email }).populate({
+    path: "traveler",
+  });
 
   if (!isUserExist) {
     throw new ApiError(httpStatus.BAD_REQUEST, "User does not exist");
@@ -225,7 +313,9 @@ const refreshToken = async (token) => {
 
   const { userId } = verifiedToken;
   // If the user already deleted then delete the refresh token
-  const isUserExist = await User.findOne({ userId: userId });
+  const isUserExist = await User.findOne({ userId: userId }).populate({
+    path: "traveler",
+  });
 
   if (!isUserExist) {
     throw new ApiError(httpStatus.BAD_REQUEST, "User does not exist");
@@ -305,7 +395,9 @@ const resetPassword = async (payload) => {
       password: await bcrypt.hash(password, Number(config.bcrypt_salt_rounds)),
     },
     { new: true }
-  );
+  ).populate({
+    path: "traveler",
+  });
 
   // Create access token
   const accessToken = jwtHelpers.createToken(

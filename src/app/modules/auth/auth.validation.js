@@ -2,8 +2,11 @@ import { z } from "zod";
 
 const registerZodSchema = z.object({
   body: z.object({
-    userName: z.string({
-      required_error: "Username is required",
+    firstName: z.string({
+      required_error: "First name is required",
+    }),
+    lastName: z.string({
+      required_error: "Last name is required",
     }),
     email: z
       .string({
