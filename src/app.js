@@ -10,8 +10,10 @@ const app = express();
 const corsOptions = {
   origin: [
     "http://localhost:3000",
+    "http://localhost:5000",
     "https://pingdashtech.org",
     "https://insignia-dev.pingdashtech.org",
+    "https://insignia-admin.pingdashtech.org",
   ],
   optionsSuccessStatus: 200,
   credentials: true,
@@ -30,10 +32,15 @@ app.use("/api/v1", routes);
 
 app.get("/", async (req, res) => {
   res.header("Access-Control-Allow-Origin", "http://localhost:3000");
+  res.header("Access-Control-Allow-Origin", "http://localhost:5000");
   res.header("Access-Control-Allow-Origin", "https://pingdashtech.org");
   res.header(
     "Access-Control-Allow-Origin",
     "https://insignia-dev.pingdashtech.org"
+  );
+  res.header(
+    "Access-Control-Allow-Origin",
+    "https://insignia-admin.pingdashtech.org"
   );
   res.send("Welcome to Insignia Tours & Travels production!!");
 });

@@ -39,29 +39,6 @@ const register = catchAsync(async (req, res) => {
   });
 });
 
-// const login = catchAsync(async (req, res) => {
-//   const { ...loginData } = req.body;
-
-//   const result = await AuthService.login(loginData);
-//   const { refreshToken, ...others } = result;
-
-//   // set refresh token into cookie
-//   res.cookie(config.refresh_token_name, refreshToken, {
-//     expires: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
-//     sameSite: "none",
-//     secure: true,
-//     httpOnly: true,
-//   });
-
-//   return sendResponse(res, {
-//     statusCode: httpStatus.OK,
-//     success: true,
-//     message: "Login successful!",
-//     meta: null,
-//     data: others,
-//   });
-// });
-
 const login = catchAsync(async (req, res) => {
   const { ...loginData } = req.body;
 
@@ -76,28 +53,18 @@ const login = catchAsync(async (req, res) => {
   });
 });
 
-// const googleLogin = catchAsync(async (req, res) => {
-//   const authHeader = req.headers.authorization;
-//   const code = authHeader.split(" ")[1];
-//   const result = await AuthService.googleLogin(code);
-//   const { refreshToken, ...others } = result;
+const adminLogin = catchAsync(async (req, res) => {
+  const { ...loginData } = req.body;
+  const result = await AuthService.adminLogin(loginData);
 
-//   // set refresh token into cookie
-//   res.cookie(config.refresh_token_name, refreshToken, {
-//     expires: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
-//     sameSite: "none",
-//     secure: true,
-//     httpOnly: true,
-//   });
-
-//   return sendResponse(res, {
-//     statusCode: httpStatus.OK,
-//     success: true,
-//     message: "Login successful!",
-//     meta: null,
-//     data: others,
-//   });
-// });
+  return sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Admin login successful!",
+    meta: null,
+    data: result,
+  });
+});
 
 const googleLogin = catchAsync(async (req, res) => {
   const authHeader = req.headers.authorization;
@@ -132,31 +99,23 @@ const logout = catchAsync(async (req, res) => {
   });
 });
 
-// const refreshToken = catchAsync(async (req, res) => {
-//   const { rT } = req.cookies;
-//   const result = await AuthService.refreshToken(rT);
-
-//   // set refresh token into cookie
-//   res.cookie(config.refresh_token_name, rT, {
-//     expires: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
-//     sameSite: "none",
-//     secure: true,
-//     httpOnly: true,
-//   });
-
-//   return sendResponse(res, {
-//     statusCode: httpStatus.OK,
-//     success: true,
-//     message: "Refresh token successful!ly",
-//     meta: null,
-//     data: result,
-//   });
-// });
-
 const refreshToken = catchAsync(async (req, res) => {
   const { token } = req.body;
-  const result = await AuthService.refreshToken(token);
 
+  const result = await AuthService.refreshToken(token);
+  return sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Refresh token successful!ly",
+    meta: null,
+    data: result,
+  });
+});
+
+const adminRefreshToken = catchAsync(async (req, res) => {
+  const { token } = req.body;
+
+  const result = await AuthService.adminRefreshToken(token);
   return sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
@@ -179,29 +138,6 @@ const forgotPassword = catchAsync(async (req, res) => {
     data: null,
   });
 });
-
-// const resetPassword = catchAsync(async (req, res) => {
-//   const { ...resetPasswordData } = req.body;
-
-//   const result = await AuthService.resetPassword(resetPasswordData);
-//   const { refreshToken, ...others } = result;
-
-//   // set refresh token into cookie
-//   res.cookie(config.refresh_token_name, refreshToken, {
-//     expires: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
-//     sameSite: "none",
-//     secure: true,
-//     httpOnly: true,
-//   });
-
-//   return sendResponse(res, {
-//     statusCode: httpStatus.OK,
-//     success: true,
-//     message: "password reset successful!",
-//     meta: null,
-//     data: others,
-//   });
-// });
 
 const resetPassword = catchAsync(async (req, res) => {
   const { ...resetPasswordData } = req.body;
@@ -239,4 +175,6 @@ export const AuthController = {
   forgotPassword,
   resetPassword,
   changePassword,
+  adminLogin,
+  adminRefreshToken
 };

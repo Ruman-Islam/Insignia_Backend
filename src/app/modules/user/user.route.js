@@ -9,14 +9,14 @@ const router = express.Router();
 
 router.patch(
   "/profile/update",
-  auth(ENUM_USER_ROLE.TRAVELER),
+  auth(ENUM_USER_ROLE.USER),
   validateRequest(UserValidation.updateUserProfileZodSchema),
   UserController.profileUpdate
 );
 
 router.post(
   "/profile-image/update",
-  auth(ENUM_USER_ROLE.TRAVELER),
+  auth(ENUM_USER_ROLE.USER),
   singleImageUploader,
   UserController.profileImageUpdate
 );

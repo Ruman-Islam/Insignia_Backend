@@ -20,20 +20,6 @@ router.post(
 
 router.get("/google/login", AuthController.googleLogin);
 
-// router.get(
-//   "/logout",
-//   // validateRequest(AuthValidation.refreshTokenZodSchema),
-//   AuthController.logout
-// );
-
-// ^ Under development
-// router.get(
-//   "/refresh/token",
-//   validateRequest(AuthValidation.refreshTokenZodSchema),
-//   AuthController.refreshToken
-// );
-// ^ .......................
-
 router.post(
   "/refresh/token",
   validateRequest(AuthValidation.refreshTokenZodSchema),
@@ -54,13 +40,21 @@ router.post(
 
 router.post(
   "/change/password",
-  auth(
-    ENUM_USER_ROLE.SUPER_ADMIN,
-    ENUM_USER_ROLE.ADMIN,
-    ENUM_USER_ROLE.TRAVELER
-  ),
+  auth(ENUM_USER_ROLE.SUPER_ADMIN, ENUM_USER_ROLE.ADMIN, ENUM_USER_ROLE.USER),
   validateRequest(AuthValidation.changePasswordZodSchema),
   AuthController.changePassword
+);
+
+router.post(
+  "/admin/login",
+  validateRequest(AuthValidation.loginZodSchema),
+  AuthController.adminLogin
+);
+
+router.post(
+  "/admin/refresh/token",
+  validateRequest(AuthValidation.refreshTokenZodSchema),
+  AuthController.adminRefreshToken
 );
 
 export const AuthRoutes = router;

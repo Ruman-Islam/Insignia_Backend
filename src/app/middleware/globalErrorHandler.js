@@ -65,6 +65,7 @@ const globalErrorHandler = (
       break;
 
     case error instanceof Error:
+      statusCode = error?.statusCode;
       message = error?.message;
       errorMessages = error?.message
         ? [

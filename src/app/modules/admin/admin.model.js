@@ -2,7 +2,7 @@ import { Schema, model } from "mongoose";
 import bcrypt from "bcrypt";
 import config from "../../../config/index.js";
 
-const UserSchema = Schema(
+const AdminSchema = Schema(
   {
     userId: {
       type: String,
@@ -33,59 +33,13 @@ const UserSchema = Schema(
       max: [15, "Too big"],
       required: [true, "Last name is missing!"],
     },
-    gender: {
-      type: String,
-      enum: {
-        values: ["male", "female"],
-        message: "{VALUE} is not matched",
-      },
-    },
     role: {
       type: String,
       enum: {
         values: ["user", "admin", "super_admin"],
         message: "{VALUE} is not matched",
       },
-      default: "user",
-    },
-    presentAddress: {
-      type: String,
-      trim: true,
-    },
-    permanentAddress: {
-      type: String,
-      trim: true,
-    },
-    martialStatus: {
-      type: String,
-      enum: {
-        values: ["married", "unmarried"],
-        message: "{VALUE} is not matched",
-      },
-    },
-    dateOfBirth: {
-      type: String,
-      trim: true,
-    },
-    passportNumber: {
-      type: String,
-      trim: true,
-    },
-    passportExpiryDate: {
-      type: String,
-      trim: true,
-    },
-    nationalID: {
-      type: String,
-      trim: true,
-    },
-    emergencyContact: {
-      type: String,
-      trim: true,
-    },
-    religion: {
-      type: String,
-      trim: true,
+      default: "admin",
     },
     password: {
       type: String,
@@ -93,9 +47,6 @@ const UserSchema = Schema(
         /^(?=.*[A-Za-z0-9])(?=.*[^A-Za-z0-9]).{8,}$/,
         "Invalid password format",
       ],
-    },
-    resetToken: {
-      type: String,
     },
     photo: {
       type: {
@@ -117,11 +68,11 @@ const UserSchema = Schema(
   }
 );
 
-UserSchema.methods.matchPassword = async function (enteredPassword) {
+AdminSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
-UserSchema.pre("save", async function (next) {
+AdminSchema.pre("save", async function (next) {
   const user = this;
   if (user.password) {
     user.password = await bcrypt.hash(
@@ -132,6 +83,6 @@ UserSchema.pre("save", async function (next) {
   next();
 });
 
-const User = model("User", UserSchema);
+const Admin = model("Admin", AdminSchema);
 
-export default User;
+export default Admin;

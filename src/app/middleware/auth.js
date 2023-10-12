@@ -10,7 +10,7 @@ const auth =
       const token = req.headers["authorization"].split(" ")[1];
 
       if (!token) {
-        throw new ApiError(httpStatus.UNAUTHORIZED, "You are not authorized");
+        throw new ApiError(httpStatus.UNAUTHORIZED, "UNAUTHORIZED!");
       }
 
       let verifiedUser = null;
@@ -18,14 +18,14 @@ const auth =
       try {
         verifiedUser = jwtHelpers.verifiedToken(token, config?.jwt?.secret);
       } catch (error) {
-        throw new ApiError(httpStatus.FORBIDDEN, "Forbidden");
+        throw new ApiError(httpStatus.FORBIDDEN, "FORBIDDEN!");
       }
 
       req.user = verifiedUser;
 
       // guard of role
       if (requiredRoles.length && !requiredRoles.includes(verifiedUser.role)) {
-        throw new ApiError(httpStatus.FORBIDDEN, "Forbidden");
+        throw new ApiError(httpStatus.UNAUTHORIZED, "UNAUTHORIZED!");
       }
 
       next();
