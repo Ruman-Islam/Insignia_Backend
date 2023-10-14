@@ -85,4 +85,110 @@ AdminSchema.pre("save", async function (next) {
 
 const Admin = model("Admin", AdminSchema);
 
+const SystemConfigSchema = Schema(
+  {
+    systemConfigId: {
+      type: String,
+      default: "system_config",
+    },
+    banner1: {
+      type: {
+        cloudinaryId: {
+          type: String,
+        },
+        cloudinaryUrl: {
+          type: String,
+          match: [/(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/, "Invalid URL format"],
+        },
+      },
+    },
+    banner2: {
+      type: {
+        cloudinaryId: {
+          type: String,
+        },
+        cloudinaryUrl: {
+          type: String,
+          match: [/(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/, "Invalid URL format"],
+        },
+      },
+    },
+    banner3: {
+      type: {
+        cloudinaryId: {
+          type: String,
+        },
+        cloudinaryUrl: {
+          type: String,
+          match: [/(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/, "Invalid URL format"],
+        },
+      },
+    },
+    window1: {
+      type: {
+        cloudinaryId: {
+          type: String,
+        },
+        cloudinaryUrl: {
+          type: String,
+          match: [/(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/, "Invalid URL format"],
+        },
+      },
+    },
+    window2: {
+      type: {
+        cloudinaryId: {
+          type: String,
+        },
+        cloudinaryUrl: {
+          type: String,
+          match: [/(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/, "Invalid URL format"],
+        },
+      },
+    },
+    window3: {
+      type: {
+        cloudinaryId: {
+          type: String,
+        },
+        cloudinaryUrl: {
+          type: String,
+          match: [/(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/, "Invalid URL format"],
+        },
+      },
+    },
+    window4: {
+      type: {
+        cloudinaryId: {
+          type: String,
+        },
+        cloudinaryUrl: {
+          type: String,
+          match: [/(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/, "Invalid URL format"],
+        },
+      },
+    },
+    bannerTitle: {
+      type: {
+        bannerText: {
+          type: String,
+        },
+        bannerSubText: {
+          type: String,
+        },
+      },
+    },
+  },
+  {
+    timestamps: true,
+    toJSON: {
+      virtuals: true,
+    },
+  }
+);
+
+const SystemConfig = model("SystemConfig", SystemConfigSchema);
+
+export { SystemConfig };
+
 export default Admin;

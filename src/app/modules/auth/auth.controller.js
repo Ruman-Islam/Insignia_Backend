@@ -55,6 +55,7 @@ const login = catchAsync(async (req, res) => {
 
 const adminLogin = catchAsync(async (req, res) => {
   const { ...loginData } = req.body;
+
   const result = await AuthService.adminLogin(loginData);
 
   return sendResponse(res, {
@@ -106,7 +107,7 @@ const refreshToken = catchAsync(async (req, res) => {
   return sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "Refresh token successful!ly",
+    message: "Refresh token successfully!",
     meta: null,
     data: result,
   });
@@ -119,7 +120,7 @@ const adminRefreshToken = catchAsync(async (req, res) => {
   return sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "Refresh token successful!ly",
+    message: "Refresh token successfully!",
     meta: null,
     data: result,
   });
@@ -176,5 +177,5 @@ export const AuthController = {
   resetPassword,
   changePassword,
   adminLogin,
-  adminRefreshToken
+  adminRefreshToken,
 };

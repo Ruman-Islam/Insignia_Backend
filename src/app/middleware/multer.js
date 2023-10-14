@@ -23,4 +23,17 @@ const singleImageUploader = multer({
   },
 }).single("image");
 
-export { singleImageUploader };
+const bannerImageUploader = multer({
+  storage: storage,
+  fileFilter: (req, file, cb) => {
+    const supportedImage = /png|jpg|jpeg|webp/;
+    const extension = path.extname(file.originalname);
+    if (supportedImage.test(extension)) {
+      cb(null, true);
+    } else {
+      cb(new ApiError(httpStatus.BAD_REQUEST, "File type is not supported"));
+    }
+  },
+}).array("image", 3);
+
+export { singleImageUploader, bannerImageUploader };
