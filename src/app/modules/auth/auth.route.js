@@ -33,6 +33,18 @@ router.post(
 );
 
 router.post(
+  "/admin/forgot/password",
+  validateRequest(AuthValidation.forgotPasswordZodSchema),
+  AuthController.adminForgotPassword
+);
+
+router.post(
+  "/admin/reset/password",
+  validateRequest(AuthValidation.resetPasswordZodSchema),
+  AuthController.adminResetPassword
+);
+
+router.post(
   "/reset/password",
   validateRequest(AuthValidation.resetPasswordZodSchema),
   AuthController.resetPassword
@@ -40,9 +52,16 @@ router.post(
 
 router.post(
   "/change/password",
-  auth(ENUM_USER_ROLE.SUPER_ADMIN, ENUM_USER_ROLE.ADMIN, ENUM_USER_ROLE.USER),
+  auth(ENUM_USER_ROLE.USER),
   validateRequest(AuthValidation.changePasswordZodSchema),
   AuthController.changePassword
+);
+
+router.post(
+  "/admin/change/password",
+  auth(ENUM_USER_ROLE.SUPER_ADMIN, ENUM_USER_ROLE.ADMIN),
+  validateRequest(AuthValidation.changePasswordZodSchema),
+  AuthController.adminChangePassword
 );
 
 router.post(

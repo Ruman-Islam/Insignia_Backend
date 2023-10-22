@@ -4,6 +4,10 @@ import config from "../../../config/index.js";
 
 const AdminSchema = Schema(
   {
+    blockStatus: {
+      type: Boolean,
+      default: false
+    },
     userId: {
       type: String,
       unique: true,
@@ -48,16 +52,8 @@ const AdminSchema = Schema(
         "Invalid password format",
       ],
     },
-    photo: {
-      type: {
-        cloudinaryId: {
-          type: String,
-        },
-        cloudinaryUrl: {
-          type: String,
-          match: [/(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/, "Invalid URL format"],
-        },
-      },
+    resetToken: {
+      type: String,
     },
   },
   {

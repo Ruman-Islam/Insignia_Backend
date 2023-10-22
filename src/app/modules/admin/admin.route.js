@@ -6,6 +6,19 @@ import { AdminController } from "./admin.controller.js";
 import { AdminValidation } from "./admin.validation.js";
 const router = express.Router();
 
+router.get(
+  "/",
+  auth(ENUM_USER_ROLE.SUPER_ADMIN, ENUM_USER_ROLE.ADMIN),
+  AdminController.getAdminList
+);
+
+router.post(
+  "/create/admin",
+  auth(ENUM_USER_ROLE.SUPER_ADMIN, ENUM_USER_ROLE.ADMIN),
+  validateRequest(AdminValidation.createAdminZodSchema),
+  AdminController.createAdmin
+);
+
 router.post(
   "/upload/banner-image",
   auth(ENUM_USER_ROLE.SUPER_ADMIN, ENUM_USER_ROLE.ADMIN),
@@ -29,6 +42,24 @@ router.get(
   "/get/system-config",
   auth(ENUM_USER_ROLE.SUPER_ADMIN, ENUM_USER_ROLE.ADMIN, ENUM_USER_ROLE.USER),
   AdminController.getSystemConfig
+);
+
+router.delete(
+  "/delete-many",
+  auth(ENUM_USER_ROLE.SUPER_ADMIN, ENUM_USER_ROLE.ADMIN),
+  AdminController.deleteManyAdmin
+);
+
+router.delete(
+  "/:id",
+  auth(ENUM_USER_ROLE.SUPER_ADMIN, ENUM_USER_ROLE.ADMIN),
+  AdminController.deleteOneAdmin
+);
+
+router.put(
+  "/update-user/:id",
+  auth(ENUM_USER_ROLE.SUPER_ADMIN, ENUM_USER_ROLE.ADMIN),
+  AdminController.updateUser
 );
 
 export const AdminRoutes = router;

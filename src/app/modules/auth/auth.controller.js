@@ -140,6 +140,34 @@ const forgotPassword = catchAsync(async (req, res) => {
   });
 });
 
+const adminForgotPassword = catchAsync(async (req, res) => {
+  const { ...forgotPasswordData } = req.body;
+
+  await AuthService.adminForgotPassword(forgotPasswordData);
+
+  return sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "An email has been sent!",
+    meta: null,
+    data: null,
+  });
+});
+
+const adminResetPassword = catchAsync(async (req, res) => {
+  const { ...resetPasswordData } = req.body;
+
+  const result = await AuthService.adminResetPassword(resetPasswordData);
+
+  return sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Password reset successful!",
+    meta: null,
+    data: result,
+  });
+});
+
 const resetPassword = catchAsync(async (req, res) => {
   const { ...resetPasswordData } = req.body;
 
@@ -161,7 +189,20 @@ const changePassword = catchAsync(async (req, res) => {
   return sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "Password reset successful!",
+    message: "Password change successful!",
+    meta: null,
+    data: null,
+  });
+});
+
+const adminChangePassword = catchAsync(async (req, res) => {
+  const payload = { ...req.body, ...req.user };
+  await AuthService.adminChangePassword(payload);
+
+  return sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Password change successful!",
     meta: null,
     data: null,
   });
@@ -174,8 +215,11 @@ export const AuthController = {
   googleLogin,
   refreshToken,
   forgotPassword,
+  adminForgotPassword,
+  adminResetPassword,
   resetPassword,
   changePassword,
   adminLogin,
   adminRefreshToken,
+  adminChangePassword,
 };

@@ -4,6 +4,10 @@ import config from "../../../config/index.js";
 
 const UserSchema = Schema(
   {
+    blockStatus: {
+      type: Boolean,
+      default: false
+    },
     userId: {
       type: String,
       unique: true,
@@ -43,7 +47,7 @@ const UserSchema = Schema(
     role: {
       type: String,
       enum: {
-        values: ["user", "admin", "super_admin"],
+        values: ["user"],
         message: "{VALUE} is not matched",
       },
       default: "user",

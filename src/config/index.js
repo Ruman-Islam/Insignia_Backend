@@ -9,7 +9,14 @@ const config = {
   port: process.env.PORT, // Port number for the server
 
   database_url: process.env.DATABASE_URL, // URL for the database
-  frontend_base_url: process.env.FRONTEND_BASE_URL, // URL for the database
+  frontend_base_url:
+    process.env.NODE_ENV === "production"
+      ? process.env.FRONTEND_BASE_URL
+      : process.env.FRONTEND_BASE_URL_DEV, // URL for the database
+  admin_frontend_base_url:
+    process.env.NODE_ENV === "production"
+      ? process.env.ADMIN_FRONTEND_BASE_URL
+      : process.env.ADMIN_FRONTEND_BASE_URL_DEV, // URL for the database
   bcrypt_salt_rounds: process.env.BCRYPT_SALT_ROUNDS,
 
   jwt: {
@@ -32,6 +39,8 @@ const config = {
   cloudinary_cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   cloudinary_api_key: process.env.CLOUDINARY_API_KEY,
   cloudinary_api_secret: process.env.CLOUDINARY_API_SECRET,
+
+  default_admin_pass: process.env.DEFAULT_ADMIN_PASS,
 };
 
 export default config;

@@ -8,7 +8,10 @@ import { generateUserId } from "./auth.utils.js";
 import { jwtHelpers } from "../../../helper/jwtHelpers.js";
 import httpStatus from "http-status";
 import bcrypt from "bcrypt";
-import { sendForgotPasswordLink } from "../../../shared/nodeMailer.js";
+import {
+  sendAdminForgotPasswordLink,
+  sendForgotPasswordLink,
+} from "../../../shared/nodeMailer.js";
 
 const oAuth2Client = new OAuth2Client(
   config.google_client_id,
@@ -54,6 +57,7 @@ const googleLogin = async (code) => {
         role: isUserExists?.role,
         userId: isUserExists?.userId,
         email: isUserExists?.email,
+        blockStatus: isUserExists?.blockStatus,
       },
       config?.jwt?.secret,
       config?.jwt?.expires_in
@@ -65,6 +69,7 @@ const googleLogin = async (code) => {
         role: isUserExists?.role,
         userId: isUserExists?.userId,
         email: isUserExists?.email,
+        blockStatus: isUserExists?.blockStatus,
       },
       config?.jwt?.refresh_secret,
       config?.jwt?.refresh_expires_in
@@ -95,6 +100,7 @@ const googleLogin = async (code) => {
         role: createdUser?.role,
         userId: createdUser?.userId,
         email: createdUser?.email,
+        blockStatus: createdUser?.blockStatus,
       },
       config?.jwt?.secret,
       config?.jwt?.expires_in
@@ -106,6 +112,7 @@ const googleLogin = async (code) => {
         role: createdUser?.role,
         userId: createdUser?.userId,
         email: createdUser?.email,
+        blockStatus: createdUser?.blockStatus,
       },
       config?.jwt?.refresh_secret,
       config?.jwt?.refresh_expires_in
@@ -147,6 +154,7 @@ const register = async (payload) => {
       role: createdUser?.role,
       userId: createdUser?.userId,
       email: createdUser?.email,
+      blockStatus: createdUser?.blockStatus,
     },
     config?.jwt?.secret,
     config?.jwt?.expires_in
@@ -158,6 +166,7 @@ const register = async (payload) => {
       role: createdUser?.role,
       userId: createdUser?.userId,
       email: createdUser?.email,
+      blockStatus: createdUser?.blockStatus,
     },
     config?.jwt?.refresh_secret,
     config?.jwt?.refresh_expires_in
@@ -192,6 +201,7 @@ const login = async (payload) => {
       role: isUserExist?.role,
       userId: isUserExist?.userId,
       email: isUserExist?.email,
+      blockStatus: isUserExist?.blockStatus,
     },
     config?.jwt?.secret,
     config?.jwt?.expires_in
@@ -203,6 +213,7 @@ const login = async (payload) => {
       role: isUserExist?.role,
       userId: isUserExist?.userId,
       email: isUserExist?.email,
+      blockStatus: isUserExist?.blockStatus,
     },
     config?.jwt?.refresh_secret,
     config?.jwt?.refresh_expires_in
@@ -289,6 +300,7 @@ const refreshToken = async (token) => {
       role: isUserExist?.role,
       userId: isUserExist?.userId,
       email: isUserExist?.email,
+      blockStatus: isUserExist?.blockStatus,
     },
     config?.jwt?.secret,
     config?.jwt?.expires_in
@@ -348,7 +360,7 @@ const forgotPassword = async (payload) => {
   const isUserExist = await User.findOne({ email });
 
   if (!isUserExist) {
-    throw new ApiError(httpStatus.BAD_REQUEST, "User does not exist");
+    throw new ApiError(httpStatus.BAD_REQUEST, "We cannot find your email.");
   }
 
   // Create access token
@@ -357,6 +369,7 @@ const forgotPassword = async (payload) => {
       role: isUserExist?.role,
       userId: isUserExist?.userId,
       email: isUserExist?.email,
+      blockStatus: isUserExist?.blockStatus,
     },
     config?.jwt?.secret,
     config?.jwt?.email_expires_in
@@ -376,6 +389,94 @@ const forgotPassword = async (payload) => {
       "Internal Server Error"
     );
   }
+};
+
+const adminForgotPassword = async (payload) => {
+  const { email } = payload;
+
+  const isUserExist = await Admin.findOne({ email });
+
+  if (!isUserExist) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "We cannot find your email.");
+  }
+
+  // Create access token
+  const accessToken = jwtHelpers.createToken(
+    {
+      role: isUserExist?.role,
+      userId: isUserExist?.userId,
+      email: isUserExist?.email,
+    },
+    config?.jwt?.secret,
+    config?.jwt?.email_expires_in
+  );
+
+  const updatedUser = await Admin.findOneAndUpdate(
+    { email },
+    { resetToken: accessToken },
+    { new: true }
+  );
+
+  if (updatedUser.resetToken) {
+    await sendAdminForgotPasswordLink(email, accessToken);
+  } else {
+    throw new ApiError(
+      httpStatus.INTERNAL_SERVER_ERROR,
+      "Internal Server Error"
+    );
+  }
+};
+
+const adminResetPassword = async (payload) => {
+  const { token, password } = payload;
+
+  let verifiedUser = null;
+  // verifiedUser = jwtHelpers.verifiedToken(token, config?.jwt?.secret);
+
+  try {
+    verifiedUser = jwtHelpers.verifiedToken(token, config?.jwt?.secret);
+  } catch (error) {
+    throw new ApiError(httpStatus.FORBIDDEN, "Token expired!");
+  }
+
+  const updatedUser = await Admin.findOneAndUpdate(
+    { email: verifiedUser.email },
+    {
+      password: await bcrypt.hash(password, Number(config.bcrypt_salt_rounds)),
+    },
+    { new: true }
+  );
+
+  // Create access token
+  const accessToken = jwtHelpers.createToken(
+    {
+      role: updatedUser?.role,
+      userId: updatedUser?.userId,
+      email: updatedUser?.email,
+    },
+    config?.jwt?.secret,
+    config?.jwt?.expires_in
+  );
+
+  // Create refresh token
+  const refreshToken = jwtHelpers.createToken(
+    {
+      role: updatedUser?.role,
+      userId: updatedUser?.userId,
+      email: updatedUser?.email,
+    },
+    config?.jwt?.refresh_secret,
+    config?.jwt?.refresh_expires_in
+  );
+
+  // Remove the password
+  updatedUser.password = undefined;
+
+  return {
+    accessToken,
+    refreshToken,
+    user: updatedUser,
+  };
 };
 
 const resetPassword = async (payload) => {
@@ -404,6 +505,7 @@ const resetPassword = async (payload) => {
       role: updatedUser?.role,
       userId: updatedUser?.userId,
       email: updatedUser?.email,
+      blockStatus: updatedUser?.blockStatus,
     },
     config?.jwt?.secret,
     config?.jwt?.expires_in
@@ -415,6 +517,7 @@ const resetPassword = async (payload) => {
       role: updatedUser?.role,
       userId: updatedUser?.userId,
       email: updatedUser?.email,
+      blockStatus: updatedUser?.blockStatus,
     },
     config?.jwt?.refresh_secret,
     config?.jwt?.refresh_expires_in
@@ -457,14 +560,44 @@ const changePassword = async (payload) => {
   );
 };
 
+const adminChangePassword = async (payload) => {
+  const { currentPassword, newPassword, email } = payload;
+  const isUserExist = await Admin.findOne({ email });
+
+  if (!isUserExist) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "Admin does not exist");
+  }
+
+  if (
+    !isUserExist.password ||
+    !(await isUserExist.matchPassword(currentPassword))
+  ) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "Password does not match!");
+  }
+
+  await Admin.findOneAndUpdate(
+    { email },
+    {
+      password: await bcrypt.hash(
+        newPassword,
+        Number(config.bcrypt_salt_rounds)
+      ),
+    },
+    { new: true }
+  );
+};
+
 export const AuthService = {
   register,
   login,
   googleLogin,
   refreshToken,
   forgotPassword,
+  adminForgotPassword,
+  adminResetPassword,
   resetPassword,
   changePassword,
   adminLogin,
   adminRefreshToken,
+  adminChangePassword,
 };

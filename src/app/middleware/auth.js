@@ -2,6 +2,7 @@ import httpStatus from "http-status";
 import ApiError from "../../errors/ApiError.js";
 import { jwtHelpers } from "../../helper/jwtHelpers.js";
 import config from "../../config/index.js";
+import User from "../modules/user/user.model.js";
 
 const auth =
   (...requiredRoles) =>
@@ -21,8 +22,14 @@ const auth =
         throw new ApiError(httpStatus.FORBIDDEN, "FORBIDDEN!");
       }
 
-      req.user = verifiedUser;
+      if (verifiedUser.role === "user") {
+        const user = await User.findOne({ userId: verifiedUser.userId })
+        if (user.blockStatus) {
+          throw new ApiError(httpStatus.FORBIDDEN, "You've been blocked!");
+        }
+      }
 
+      req.user = verifiedUser;
       // guard of role
       if (requiredRoles.length && !requiredRoles.includes(verifiedUser.role)) {
         throw new ApiError(httpStatus.UNAUTHORIZED, "UNAUTHORIZED!");
