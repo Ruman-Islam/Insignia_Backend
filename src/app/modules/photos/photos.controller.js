@@ -48,18 +48,18 @@ const deleteManyPhoto = catchAsync(async (req, res) => {
 });
 
 const updateVisibility = catchAsync(async (req, res) => {
-    const { id } = req.params;
-  
-    const result = await PhotoService.updateVisibility(id);
-  
-    return sendResponse(res, {
-      statusCode: httpStatus.OK,
-      success: true,
-      message: "Photo updated successfully",
-      meta: null,
-      data: result,
-    });
+  const { id } = req.params;
+
+  const result = await PhotoService.updateVisibility(id);
+
+  return sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Photo updated successfully",
+    meta: null,
+    data: result,
   });
+});
 
 const getAllPhoto = catchAsync(async (req, res) => {
   const filters = pick(req.query, photosFilterableField);

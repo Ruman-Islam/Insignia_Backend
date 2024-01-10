@@ -8,6 +8,8 @@ import { VideoRoutes } from "../modules/video/video.route.js";
 import { QuestionRoutes } from "../modules/Question/question.route.js";
 import { ReviewRoutes } from "../modules/reviews/reviews.route.js";
 import { PhotoRoutes } from "../modules/photos/photos.route.js";
+import { PackageRoutes } from "../modules/package/package.route.js";
+import { SearchRoutes } from "../modules/search/search.route.js";
 const routes = express.Router();
 
 // Defining an array of module routes to be mounted on the router
@@ -47,6 +49,14 @@ const moduleRoutes = [
   {
     path: "/photo",
     route: PhotoRoutes,
+  },
+  {
+    path: "/package",
+    route: PackageRoutes,
+  },
+  {
+    path: "/search",
+    route: SearchRoutes,
   },
 ];
 
